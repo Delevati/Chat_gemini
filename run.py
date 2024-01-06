@@ -1,6 +1,6 @@
 import requests
 
-API_KEY = 'AIzaSyDRl5XjlSdr-dSWUFGYNtchnZ1EmI4NyLY'
+API_KEY = ''
 API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent'
 
 def solicity(texto, contexto=None):

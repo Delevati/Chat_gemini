@@ -3,7 +3,7 @@ import requests
 API_KEY = 'AIzaSyDRl5XjlSdr-dSWUFGYNtchnZ1EmI4NyLY'
 API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent'
 
-def fazer_solicitacao(texto, contexto=None):
+def solicity(texto, contexto=None):
     headers = {'Content-Type': 'application/json'}
     data = {'contents': [{'parts': [{'text': texto}]}]}
 
@@ -32,20 +32,17 @@ def fazer_solicitacao(texto, contexto=None):
         return f'Erro na solicitação: {e}', None
 
 def main():
-    contexto_conversa = None
-
     while True:
-        texto_para_enviar = input('Fala guri: ').strip()
+        request = input('Fala guri: ').strip()
 
-        if texto_para_enviar.lower() == 'sair':
+        if request.lower() == 'sair':
             break
 
-        resposta, contexto_conversa = fazer_solicitacao(texto_para_enviar, contexto_conversa)
+        resposta, _ = solicity(request)
 
         if resposta:
-            print('\nVocê:', texto_para_enviar)
-            print(' *** RESPOSTA:', resposta)
-            print(''.join(['_' for _ in range(50)])) 
-            
+            print('\n *** RESPOSTA:', resposta)
+            print(''.join(['_' for _ in range(50)]))
+
 if __name__ == '__main__':
     main()

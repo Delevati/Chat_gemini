@@ -1,13 +1,13 @@
 import requests
 import json
+import dotenv
+import os
 
-# Substitua 'SUA_CHAVE_API' pela sua chave API real
-API_KEY = ''
-API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent'
+dotenv.load_dotenv()
 
 def solicity():
-    instrucao_fixa = "Você é um programa para extrair campos importantes de um texto, eu preciso que vc extraia os campos: Numero da nota, data e hora de emissao como um unico campo, o município onde o serviço foi prestado, o codigo do serviço, o valor total bruto da nota, o CPF ou CNPJ do prestador, CPF ou CNPJ do tomador e a Observacao/Descriminacao da nota. Me de a resposta com apenas os campos extraidos em um formato json e a chave dos valors deve os nomes das tags sendo essas exatas: numeroNFSe, dataEmissaoNFSe, municipioExecServico, codigoServico, valorServico, CPF_CNPJ_Prestador, CPF_CNPJ_Tomador e Observaca/Descriminação dos serviços."
-    texto_para_enviar = "prefeitura municipal de fortaleza numero da fortaleza prefcitura secretaria municipal das financas nfse financas nota fiscal eletronica de servico nfse 41 data e hora da emissao 06022023 181818 competencia 022023 codigo de verificacao 842352057 numero do rps no nfse substituida local da prestacao fortaleza ce dados do prestador de servicos razao socialnome share consultoria em tecnologia da informacao ltda nome fantasia share tecnologia cpficnpj 35708358000158 insc municipal 5280737 municipio fortaleza ce endereco e cep r flor de lis,236 parangaba cep60740440 complemento telefone email fabiiolaellengmailcom dados do tomador de servicos razao socialnome gran tecnologia e educacao sia cpficnpj 18260822000177 inscricao municipal municipio brasilia df endereco e cep sbs quadra 2, sn 70070120 cep 70070120 complemento iala 201 sala 601 sala telefone 61999970117 email annarodriguesggeducacionalcombr discriminacao dos servicos alertas e notificacoes de termos nos diarios oficiais codigo de atividade cnae 103 631190099 tratamento de dados provedores de servicos de aplicacao e servicos de hospedagem na internet detalhamento especifico da construcao civil da obra codigo art tributos federais pis cofins irrs inssrs csllrs detalhamento de valores prestador dos servicos calculo do issqn devido no municipio valor dos servicos r$ 1990,00 natureza operacao valor dos servicos r$ 1990,00 desconto incondicionado 1tributacao no municipio deducoes permitidas em lei desconto condicionado regime especial tributacao desconto incondicionado retencoes federais 0,00 6microempresario e empresa de base de calculo 1990,00 outras retencoes opcao simples nacional aliquota % 5,00 iss retido 0,00 1 sim iss a reter sim x nao incentivador cultural valor liquido r$ 1990,00 valor do iss r$ 99,50 2 nao uma via desta nota fiscal sera enviada atraves do email fornecido pelo tomador dos servicos, no sitio httptliss fortalezacegovbr 2 a autenticidade desta nota fiscal podera ser validada no site httplliss fortalezace gov brl , com a utilizacao do codigo de verificacao 3 documento emitido por me ou epp optante pelo simples nacional nao gera direito a credito fiscal de iss e ipi avisos 4 servico sujeito ao anexo 3 5 servicos nao sujeitos ao fator r' e tributados pelo anexo iii, exceto para 0 exterior , sem retencao com iss devido ao proprio municipio codigo "
+    instrucao_fixa = "Voce eh um programa especializado em extrair alguns campos de uma string. Os campos a serem extraidos sao: [cnpj fornecedor][cnpj empresa][valorboleto][data competencia][numero do documento]"
+    texto_para_enviar = "Boleto DDA Documento nao compensavel bradesco net empresa Dados do Banco Destinatario Banco Codigo 237 Nome Banco Bradesco SA Codigo de 23110106693516420 Identificacao DDA Dados do Beneficiario Beneficiario Nome FT VELLOITCORE PLATO 365 SOLUCOES EM TE CPFCNPJ 030962993000143 Endereco R EMILIO MALLET, 317 VILA GOMES CARDIM 03320000 SAO PAULO SP Agencia 02423 Conta 39952 3 Dados do Pagador Pagador Nome INSPER INSTITUTO DE ENSINO E PESQUISA CPFCNPJ 006070152000147 Endereco RUA QUATA 300 VILA OLIMPIA 04546042 SAO PAULO SP Dados do Boleto Data do Data do documento 01112023 processamento 01112023 Data e hora da impressao 01112023 145103 Data do vencimento 30112023 Data limite de pagamento 29012024 Nosso numero 09330500000026 Seu numero 000451 Especie do DM Carteira 9 documento CIP 000 Especie moeda R$ Quantidade Aceite N Valor do documento R$ 491188 Descontos R$ Abatimentos R$ Bonificacao R$ Juros R$ Multa R$ Valor a cobrar R$ Dados do beneficiario final Beneficiario final Nome Nao informado Endereco Nao informado Mensagemn de Instrucao VALORES EXPRESSOS EM REAIS 444 ^ JUROS POR DIA DE ATRASO 163 APOS 30112023 MULTA 98,23 Representacao Numerica Numero 2379242304 93305000007 02003995202 1 95500000491188 Sac Servi?o de 4l? Bradesco Deficiente Auditivo ou de Fala Cancelamentos, Reclam a??es Inform a??es Dem ais telefones Apoio a0 Cliente 0800 704 8383 0800 722 0099 Ptendim ento 24 horas, dias Por semana consulte 0 site Fale Conosco Ouvidoria 0800 727 9933 Ptendim ento de segunda 2 sextafeira das 8h ?s 18h, exceto feriados ",
 
     headers = {
         'Content-Type': 'application/json',
@@ -23,10 +23,10 @@ def solicity():
     }
 
     params = {
-        'key': API_KEY
+        'key': os.getenv("API_KEY")
     }
 
-    response = requests.post(API_URL, headers=headers, json=data, params=params)
+    response = requests.post(os.getenv("API_URL"), headers=headers, json=data, params=params)
 
     if response.status_code == 200:
         resposta_json = response.json()

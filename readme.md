@@ -4,3 +4,4 @@
 
 #Aqui somente um exemplo de chat, com PROMPT pré-definido e com CHAT em 
 tempo real através do terminal.
+

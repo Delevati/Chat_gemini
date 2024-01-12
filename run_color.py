@@ -1,6 +1,5 @@
 import requests
 import re
-import google.generativeai as genai
 import dotenv
 import os
 
@@ -14,35 +13,24 @@ class TerminalColors:
     GREEN = '\033[92m'
     YELLOW = '\033[93m'
     BLUE = '\033[94m'
-
-
-generation_config = {
-    "temperature": 8.0,
-    "top_p": 5,
-    "top_k": 5,
-    "max_output_tokens": 2048,
-}
-
-safety_settings = [
-
-]
-
-genai.configure(api_key=os.getenv("API_KEY"))
-
-model = genai.GenerativeModel(model_name="gemini-pro",
-                              generation_config=generation_config,
-                              safety_settings=safety_settings)
+    MAGENTA = '\033[95m'
+    CYAN = '\033[96m'
+    WHITE = '\033[97m'
 
 def apply_color_to_text(text):
-    colored_text = re.sub(r'\*\*(.*?)\*\*|\d+\.\s', lambda match: f'{TerminalColors.YELLOW}{match.group(0)}{TerminalColors.RESET}', text)
+    # Se encontrar '**', aplica a cor aos caracteres entre '**'
+    if '**' in text:
+        colored_text = re.sub(r'\*\*(.*?)\*\*', f'{TerminalColors.YELLOW}\\1{TerminalColors.RESET}', text)
+    else:
+        colored_text = text
+
+    # Se encontrar índices numéricos seguidos por ponto, aplica a cor
+    colored_text = re.sub(r'(\d+\.\s)', f'{TerminalColors.YELLOW}\\1{TerminalColors.RESET}', colored_text)
+    
     return colored_text
 
 def solicity(texto, contexto=None):
     headers = {'Content-Type': 'application/json'}
-    
-    # Modificando aqui para agrupar todas as linhas em uma única string
-    texto = texto.replace('\n', ' ')
-    
     data = {'contents': [{'parts': [{'text': texto}]}]}
 
     if contexto:
@@ -51,19 +39,19 @@ def solicity(texto, contexto=None):
     params = {'key': os.getenv("API_KEY")}
 
     try:
-        with requests.post(os.getenv("API_URL"), headers=headers, json=data, params=params) as response:
-            response.raise_for_status()
-            resposta_json = response.json()
+        response = requests.post(os.getenv("API_URL"), headers=headers, json=data, params=params)
+        response.raise_for_status()
 
+        resposta_json = response.json()
         candidatos = resposta_json.get('candidates', [])
 
         if candidatos:
             proximo_contexto = resposta_json.get('context')
             texto_gerado = candidatos[0]['content']['parts'][0]['text']
             return apply_color_to_text(texto_gerado), proximo_contexto
-
-        print(f'{TerminalColors.RED}Resposta JSON inválida.{TerminalColors.RESET}')
-        return None, None
+        else:
+            print(f'{TerminalColors.RED}Resposta JSON inválida.{TerminalColors.RESET}')
+            return None, None
 
     except requests.exceptions.RequestException as e:
         erro_msg = f'Erro na solicitação: {e}'
@@ -72,8 +60,8 @@ def solicity(texto, contexto=None):
 
 def main():
     while True:
-        # Modificando aqui para permitir quebras de linha na entrada
-        request = input(f'{TerminalColors.BOLD}Fala guri:{TerminalColors.RESET}\n')
+        request = input(f'{TerminalColors.BOLD}Fala guri:{TerminalColors.RESET} ').strip()
+
         if request.lower() == 'sair':
             break
 

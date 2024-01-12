@@ -29,4 +29,16 @@ Para executar o projeto, siga as instruções abaixo:
 1. Clone o repositório:
 
    ```bash
-   git clone https://github.com/seu-usuario/seu-repositorio.git
+   git clone https://github.com/Delevati/Chat_gemini.git
+
+2. Crie o ambiente e depois de requirement:
+
+   ```bash
+    pip install -r requirements.txt
+
+3. Execute o script desejado:
+
+   ```bash
+python run_prompt.py
+
+

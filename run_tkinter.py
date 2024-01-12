@@ -1,44 +1,88 @@
-import tkinter as tk
-from tkinter import scrolledtext, ttk
 import requests
-import regex
+import re
+import google.generativeai as genai
 import dotenv
 import os
+import tkinter as tk
+from tkinter import Label, Entry, Button, Scrollbar, Text, END, messagebox
 
 dotenv.load_dotenv()
 
+class TerminalColors:
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+
+
 generation_config = {
-    "temperature": None,
-    "top_p": None,
-    "top_k": None,
-    "max_output_tokens": None,
+    "temperature": 8.0,
+    "top_p": 5,
+    "top_k": 5,
+    "max_output_tokens": 2048,
 }
 
-safety_settings = [
-    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-]
+safety_settings = []
 
-def apply_color_to_text(text_widget, text, tag):
-    color_map = {
-        r'\*\*(.*?)\*\*': 'yellow',
-    }
+genai.configure(api_key=os.getenv("API_KEY"))
 
-    for pattern, color in color_map.items():
-        matches = regex.finditer(pattern, text)
-        for match in matches:
-            start, end = match.span()
-            text_widget.tag_add(tag, f"1.{start}", f"1.{end}")
+model = genai.GenerativeModel(model_name="gemini-pro",
+                              generation_config=generation_config,
+                              safety_settings=safety_settings)
 
-    return text
+class TextExchangeUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Troca de Texto")
+        
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.text_output = Text(self.root, wrap=tk.WORD, height=15, width=50, state=tk.DISABLED)
+        self.text_output.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
+
+        scrollbar = Scrollbar(self.root, command=self.text_output.yview)
+        scrollbar.grid(row=0, column=2, sticky='ns')
+        self.text_output['yscrollcommand'] = scrollbar.set
+
+        Label(self.root, text="Digite a mensagem:").grid(row=1, column=0, columnspan=2, pady=5)
+
+        self.text_input = Entry(self.root, width=40)
+        self.text_input.grid(row=2, column=0, columnspan=2, pady=5)
+
+        Button(self.root, text="Enviar", command=self.send_message).grid(row=3, column=0, columnspan=2, pady=10)
+
+    def send_message(self):
+        user_input = self.text_input.get()
+        if user_input.lower() == 'sair':
+            self.root.destroy()
+        else:
+            response, _ = solicity(user_input)
+
+            if response:
+                self.display_response(response)
+
+            self.text_input.delete(0, END)  # Limpar a caixa de entrada
+
+    def display_response(self, response):
+        self.text_output.config(state=tk.NORMAL)
+        self.text_output.insert(END, f'{response}\n\n')
+        self.text_output.config(state=tk.DISABLED)
+        self.text_output.yview(tk.END)  # Rolagem automática para a última mensagem visível
+
+def apply_color_to_text(text):
+    colored_text = re.sub(r'\*\*(.*?)\*\*|\d+\.\s', lambda match: f'{TerminalColors.YELLOW}{match.group(0)}{TerminalColors.RESET}', text)
+    return colored_text
 
 def solicity(texto, contexto=None):
     headers = {'Content-Type': 'application/json'}
-
+    
+    # Modificando aqui para agrupar todas as linhas em uma única string
     texto = texto.replace('\n', ' ')
-
+    
     data = {'contents': [{'parts': [{'text': texto}]}]}
 
     if contexto:
@@ -56,106 +100,17 @@ def solicity(texto, contexto=None):
         if candidatos:
             proximo_contexto = resposta_json.get('context')
             texto_gerado = candidatos[0]['content']['parts'][0]['text']
-            return texto_gerado, proximo_contexto
+            return apply_color_to_text(texto_gerado), proximo_contexto
 
-        print('\033[91mResposta JSON inválida.\033[0m')
+        print(f'{TerminalColors.RED}Resposta JSON inválida.{TerminalColors.RESET}')
         return None, None
 
     except requests.exceptions.RequestException as e:
         erro_msg = f'Erro na solicitação: {e}'
-        print(f'\033[91m{erro_msg}\033[0m')
+        print(f'{TerminalColors.RED}{erro_msg}{TerminalColors.RESET}')
         return erro_msg, None
 
-class TerminalApp:
-    def __init__(self, root):
-        self.root = root
-        root.title("LLM Terminal")
-        root.geometry("800x600")
-
-        style = ttk.Style()
-        style.theme_use("clam")
-
-        style.configure("TFrame", background="#2E2E2E")
-        style.configure("TButton", background="#444", foreground="white")
-        style.configure("TLabel", background="#2E2E2E", foreground="white")
-        style.configure("TText", background="#333", foreground="white", font=("Helvetica Neue", 15))
-        style.map("TButton", background=[("active", "#555")])
-
-        # Configuração de pesos para dividir a área de conversação e os botões
-        root.columnconfigure(0, weight=1)
-        root.rowconfigure(0, weight=8)
-        root.rowconfigure(1, weight=2)
-
-        # Criar um Frame para conter os controles deslizantes
-        sliders_frame = ttk.Frame(root, style="TFrame")
-        sliders_frame.grid(row=0, column=1, sticky=tk.NSEW)
-
-        # Configurar pesos para dividir a largura entre a área de conversação e os controles deslizantes
-        sliders_frame.columnconfigure(0, weight=1)
-
-        # Adicionar a área de conversação
-        self.text_entry = scrolledtext.ScrolledText(root, wrap=tk.NONE, bg="#333", fg="white", insertbackground="white")
-        self.text_entry.grid(row=0, column=0, sticky=tk.NSEW)
-
-        # Adicionar os controles deslizantes no Frame
-        self.create_slider(sliders_frame, "Temperatura", "temperature", row=0, column=0)
-        self.create_slider(sliders_frame, "Top P", "top_p", row=1, column=0)
-        self.create_slider(sliders_frame, "Top K", "top_k", row=2, column=0)
-        self.create_slider(sliders_frame, "Max Tokens", "max_output_tokens", multiple=512, max_value=10000, row=3, column=0)
-
-        # Configurar barra de rolagem horizontal para a área de conversação
-        horizontal_scrollbar = ttk.Scrollbar(root, orient="horizontal", command=self.text_entry.xview)
-        horizontal_scrollbar.grid(row=1, column=0, sticky=tk.EW)
-        self.text_entry.configure(xscrollcommand=horizontal_scrollbar.set)
-
-
-    def create_slider(self, root, label_text, config_key, multiple=1, max_value=None, row=0, column=0):
-        label = ttk.Label(root, text=label_text)
-        label.grid(row=row, column=column, sticky=tk.E, padx=5, pady=5)
-
-        variable = tk.DoubleVar() if "temperature" in config_key else tk.IntVar()
-        variable.set(generation_config[config_key] if generation_config[config_key] is not None else 10)
-
-        def update_label(value, key=config_key):
-            variable = generation_config[key]
-            variable.set(value)
-            label = next((w for w in self.root.winfo_children() if w.winfo_name() == key + "_label"), None)
-            if label:
-                label.config(text=f"{key.replace('_', ' ').title()}: {variable.get()}")
-
-        scale = tk.Scale(
-            root, from_=1, to=max_value, orient=tk.HORIZONTAL, label=label_text,
-            variable=variable, command=lambda x, key=config_key: update_label(x, key),
-            resolution=multiple
-        )
-        scale.set(variable.get())
-        scale.grid(row=row+1, column=column, sticky=tk.E, padx=5, pady=5)
-
-        label = ttk.Label(root, text=f"{label_text}: {variable.get()}", name=f"{config_key}_label")
-        label.grid(row=row+2, column=column, sticky=tk.E, padx=5, pady=5)
-
-        generation_config[config_key] = variable
-
-    def process_input(self, event):
-        input_text = self.text_entry.get("1.0", tk.END)
-        input_text = input_text.strip()
-
-        # Adiciona a mensagem do usuário à saída da conversação com espaçamento
-        self.text_entry.config(state=tk.NORMAL)
-        self.text_entry.insert(tk.END, f"\nVocê: {input_text}\n")
-
-        # Envia a mensagem para a LLM
-        response, _ = solicity(input_text)
-
-        # Adiciona a resposta da LLM à saída da conversação com espaçamento
-        if response:
-            apply_color_to_text(self.text_entry, response, 'yellow')
-            self.text_entry.insert(tk.END, f"LLM: {response}\n")
-
-        self.text_entry.see(tk.END)  # Rolagem automática para a última linha
-        self.text_entry.config(state=tk.DISABLED)
-
-# Chamando a função para criar a interface gráfica
-root = tk.Tk()
-app = TerminalApp(root)
-root.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = TextExchangeUI(root)
+    root.mainloop()

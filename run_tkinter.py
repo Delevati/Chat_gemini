@@ -65,13 +65,13 @@ class TextExchangeUI:
             if response:
                 self.display_response(response)
 
-            self.text_input.delete(0, END)  # Limpar a caixa de entrada
+            self.text_input.delete(0, END) 
 
     def display_response(self, response):
         self.text_output.config(state=tk.NORMAL)
         self.text_output.insert(END, f'{response}\n\n')
         self.text_output.config(state=tk.DISABLED)
-        self.text_output.yview(tk.END)  # Rolagem automática para a última mensagem visível
+        self.text_output.yview(tk.END) 
 
 def apply_color_to_text(text):
     colored_text = re.sub(r'\*\*(.*?)\*\*|\d+\.\s', lambda match: f'{TerminalColors.YELLOW}{match.group(0)}{TerminalColors.RESET}', text)
@@ -80,7 +80,7 @@ def apply_color_to_text(text):
 def solicity(texto, contexto=None):
     headers = {'Content-Type': 'application/json'}
     
-    # Modificando aqui para agrupar todas as linhas em uma única string
+
     texto = texto.replace('\n', ' ')
     
     data = {'contents': [{'parts': [{'text': texto}]}]}

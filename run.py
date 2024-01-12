@@ -39,8 +39,7 @@ def apply_color_to_text(text):
 
 def solicity(texto, contexto=None):
     headers = {'Content-Type': 'application/json'}
-    
-    # Modificando aqui para agrupar todas as linhas em uma única string
+
     texto = texto.replace('\n', ' ')
     
     data = {'contents': [{'parts': [{'text': texto}]}]}
@@ -72,7 +71,6 @@ def solicity(texto, contexto=None):
 
 def main():
     while True:
-        # Modificando aqui para permitir quebras de linha na entrada
         request = input(f'{TerminalColors.BOLD}Fala guri:{TerminalColors.RESET}\n')
         if request.lower() == 'sair':
             break

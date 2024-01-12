@@ -18,13 +18,11 @@ class TerminalColors:
     WHITE = '\033[97m'
 
 def apply_color_to_text(text):
-    # Se encontrar '**', aplica a cor aos caracteres entre '**'
     if '**' in text:
         colored_text = re.sub(r'\*\*(.*?)\*\*', f'{TerminalColors.YELLOW}\\1{TerminalColors.RESET}', text)
     else:
         colored_text = text
 
-    # Se encontrar índices numéricos seguidos por ponto, aplica a cor
     colored_text = re.sub(r'(\d+\.\s)', f'{TerminalColors.YELLOW}\\1{TerminalColors.RESET}', colored_text)
     
     return colored_text
